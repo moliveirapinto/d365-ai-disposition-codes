@@ -95,6 +95,9 @@ export function buildCustomizations(xml, template = readPromptSource()) {
   spec.OutputRootEntity.Attributes.structuredOutput.Entity.Attributes = {
     recommendations: { Type: "Array", Entity: { DisplayName: "", Attributes: {} } },
   };
+  // gzip output differs between zlib builds (Windows vs Linux), so keep the existing bytes when
+  // the decoded specification is already what we want. This keeps the build and --check stable.
+  if (JSON.stringify(spec) === JSON.stringify(JSON.parse(zlib.gunzipSync(Buffer.from(specMatch[2], "base64")).toString("utf8")))) return out;
   const newSpec = zlib.gzipSync(Buffer.from(JSON.stringify(spec), "utf8"), { level: 9 }).toString("base64");
   out = out.replace(SPEC_RE, (_, a, _b, c) => a + newSpec + c);
   return out;
